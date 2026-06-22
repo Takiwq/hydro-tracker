@@ -1,0 +1,465 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Норма воды — трекер воды</title>
+  <link rel="manifest" href="manifest.json">
+  <meta name="theme-color" content="#080e1a">
+  <link rel="icon" href="icon-192.png" type="image/png">
+  <link rel="apple-touch-icon" href="icon-192.png">
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;600;700&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+
+  <div class="bg-orbs" aria-hidden="true">
+    <div class="orb orb-1"></div>
+    <div class="orb orb-2"></div>
+    <div class="orb orb-3"></div>
+  </div>
+
+  <div class="app">
+
+    <!-- HEADER -->
+    <header class="header">
+      <div class="header-icon">💧</div>
+      <div class="header-text">
+        <h1 class="header-title">Норма воды</h1>
+        <p class="header-sub" id="today-date"></p>
+      </div>
+    </header>
+
+    <!-- НОРМА ВОДЫ -->
+    <section class="card weight-card">
+      <p class="section-title">Норма воды</p>
+      <div class="weight-row">
+        <div class="weight-input-wrap">
+          <label class="weight-label" for="weight-input">Вес</label>
+          <div class="weight-field">
+            <input
+              type="number"
+              id="weight-input"
+              class="weight-input"
+              placeholder="70"
+              min="20"
+              max="300"
+              inputmode="numeric"
+            />
+            <span class="weight-unit">кг</span>
+          </div>
+        </div>
+        <div class="weight-arrow">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+        </div>
+        <div class="goal-display">
+          <span class="goal-label">Норма</span>
+          <span class="goal-value" id="goal-value">2800 <span class="goal-ml">мл</span></span>
+          <span class="goal-formula" id="goal-formula">70 кг × 40 мл</span>
+        </div>
+      </div>
+    </section>
+
+    <!-- ПРОГРЕСС — СТАКАН С ВОДОЙ -->
+    <section class="card progress-card">
+      <div class="progress-header">
+        <span class="progress-label">Выпито сегодня</span>
+        <span class="progress-fraction" id="progress-fraction">0 / 2800 мл</span>
+      </div>
+
+      <!-- Стакан-визуализатор (SVG, всё в одном) -->
+      <div class="glass-wrap" role="progressbar" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0" id="progress-bar-el">
+        <svg class="glass-svg" id="glass-svg"
+             viewBox="0 0 160 220"
+             xmlns="http://www.w3.org/2000/svg"
+             aria-hidden="true">
+          <defs>
+            <!-- Форма стакана: трапеция с закруглённым дном -->
+            <!-- top-left(22,8) top-right(138,8) bottom-right(118,200) bottom-left(42,200) -->
+            <clipPath id="glass-clip">
+              <path d="M22,8 L138,8 L118,200 Q80,212 42,200 Z"/>
+            </clipPath>
+
+            <!-- Градиент воды (снизу вверх: тёмно-синий → голубой, плавный без полос) -->
+            <linearGradient id="water-grad" x1="0" y1="1" x2="0" y2="0" gradientUnits="objectBoundingBox">
+              <stop offset="0%"   stop-color="#0050c8" stop-opacity="0.90"/>
+              <stop offset="25%"  stop-color="#0070d8" stop-opacity="0.87"/>
+              <stop offset="50%"  stop-color="#0090e8" stop-opacity="0.83"/>
+              <stop offset="75%"  stop-color="#00b0f0" stop-opacity="0.78"/>
+              <stop offset="100%" stop-color="#00ccff" stop-opacity="0.72"/>
+            </linearGradient>
+
+            <!-- Градиенты волн: цвет растворяется вниз до полной прозрачности,
+                 чтобы нижний край волны не давал резкой кромки на теле воды -->
+            <linearGradient id="wave1-grad" x1="0" y1="0" x2="0" y2="1">
+              <stop offset="0%"  stop-color="#00aaff" stop-opacity="0.6"/>
+              <stop offset="60%" stop-color="#00aaff" stop-opacity="0.25"/>
+              <stop offset="100%" stop-color="#00aaff" stop-opacity="0"/>
+            </linearGradient>
+            <linearGradient id="wave2-grad" x1="0" y1="0" x2="0" y2="1">
+              <stop offset="0%"  stop-color="#00d5ff" stop-opacity="0.42"/>
+              <stop offset="60%" stop-color="#00d5ff" stop-opacity="0.15"/>
+              <stop offset="100%" stop-color="#00d5ff" stop-opacity="0"/>
+            </linearGradient>
+            <linearGradient id="wave3-grad" x1="0" y1="0" x2="0" y2="1">
+              <stop offset="0%"  stop-color="#78e1ff" stop-opacity="0.28"/>
+              <stop offset="60%" stop-color="#78e1ff" stop-opacity="0.1"/>
+              <stop offset="100%" stop-color="#78e1ff" stop-opacity="0"/>
+            </linearGradient>
+
+            <!-- Блик по левому краю стекла -->
+            <linearGradient id="glass-shine-left" x1="0" y1="0" x2="1" y2="0">
+              <stop offset="0%"   stop-color="white" stop-opacity="0.18"/>
+              <stop offset="100%" stop-color="white" stop-opacity="0"/>
+            </linearGradient>
+
+            <!-- Блик верхний (горизонтальный) -->
+            <linearGradient id="glass-top-shine" x1="0" y1="0" x2="0" y2="1">
+              <stop offset="0%"   stop-color="white" stop-opacity="0.22"/>
+              <stop offset="100%" stop-color="white" stop-opacity="0"/>
+            </linearGradient>
+
+            <!-- Тонкое стекло: внутреннее затемнение по бокам -->
+            <linearGradient id="glass-inner-shadow" x1="0" y1="0" x2="1" y2="0">
+              <stop offset="0%"   stop-color="#001840" stop-opacity="0.35"/>
+              <stop offset="18%"  stop-color="#001840" stop-opacity="0"/>
+              <stop offset="82%"  stop-color="#001840" stop-opacity="0"/>
+              <stop offset="100%" stop-color="#001840" stop-opacity="0.3"/>
+            </linearGradient>
+
+            <!-- Лёгкий вертикальный объём стекла (светлее сверху, темнее у дна) -->
+            <linearGradient id="glass-volume" x1="0" y1="0" x2="0" y2="1">
+              <stop offset="0%"   stop-color="#bfe9ff" stop-opacity="0.10"/>
+              <stop offset="45%"  stop-color="#7fd4ff" stop-opacity="0.03"/>
+              <stop offset="100%" stop-color="#021024" stop-opacity="0.12"/>
+            </linearGradient>
+
+            <!-- Радиальный блик-капля (имитация преломления света в стекле) -->
+            <radialGradient id="glass-highlight-dot" cx="0.5" cy="0.5" r="0.5">
+              <stop offset="0%"  stop-color="white" stop-opacity="0.55"/>
+              <stop offset="100%" stop-color="white" stop-opacity="0"/>
+            </radialGradient>
+
+            <!-- Градиент для эллипса горлышка (верхний ободок, объём) -->
+            <linearGradient id="rim-grad" x1="0" y1="0" x2="0" y2="1">
+              <stop offset="0%"   stop-color="#eafcff" stop-opacity="0.5"/>
+              <stop offset="100%" stop-color="#eafcff" stop-opacity="0.05"/>
+            </linearGradient>
+
+            <!-- Фильтр свечения воды -->
+            <filter id="water-glow" x="-10%" y="-10%" width="120%" height="120%">
+              <feGaussianBlur in="SourceGraphic" stdDeviation="3" result="blur"/>
+              <feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge>
+            </filter>
+          </defs>
+
+          <!-- === ТЕНЬ ПОД СТАКАНОМ === -->
+          <ellipse cx="80" cy="210" rx="50" ry="7" fill="rgba(0,150,255,0.1)"/>
+
+          <!-- === СОДЕРЖИМОЕ СТАКАНА (обрезается по форме) === -->
+          <g clip-path="url(#glass-clip)">
+
+            <!-- Фон стекла (прозрачный, едва тонированный — настоящее стекло, не сплошной цвет) -->
+            <path d="M22,8 L138,8 L118,200 Q80,212 42,200 Z"
+                  fill="rgba(8,22,42,0.22)"/>
+
+            <!-- ВОДА — rect, поднимается снизу; JS меняет y и height -->
+            <!-- Нижняя граница = 214 (с запасом ниже самой нижней точки дна 212),
+                 чтобы скруглённая часть дна стакана всегда была залита водой -->
+            <rect id="water-rect"
+                  x="0" y="214" width="160" height="0"
+                  fill="url(#water-grad)" />
+
+            <!-- ВОЛНЫ — следуют за уровнем воды; JS двигает translateY группы -->
+            <g id="waves-group" transform="translate(0,0)">
+              <!-- ВОЛНА 1 -->
+              <path id="wave1"
+                    d="M-20,200 C10,189 40,211 70,200 C100,189 130,211 180,200 L180,220 L-20,220 Z"
+                    fill="url(#wave1-grad)">
+                <animateTransform attributeName="transform" type="translate"
+                  begin="0s" dur="3.4s" repeatCount="indefinite"
+                  values="0,0; 30,0; 0,0" calcMode="spline"
+                  keySplines="0.45 0 0.55 1; 0.45 0 0.55 1"/>
+              </path>
+
+              <!-- ВОЛНА 2 — противоход, чуть светлее -->
+              <path id="wave2"
+                    d="M-20,200 C15,210 50,190 80,200 C110,210 145,190 180,200 L180,220 L-20,220 Z"
+                    fill="url(#wave2-grad)">
+                <animateTransform attributeName="transform" type="translate"
+                  begin="0s" dur="4.8s" repeatCount="indefinite"
+                  values="0,0; -28,0; 0,0" calcMode="spline"
+                  keySplines="0.45 0 0.55 1; 0.45 0 0.55 1"/>
+              </path>
+
+              <!-- КОЛЫХАНИЕ: лёгкий горизонтальный sloshing поверх воды -->
+              <path id="wave3"
+                    d="M-20,200 C30,193 80,207 130,200 C155,196 170,203 180,200 L180,220 L-20,220 Z"
+                    fill="url(#wave3-grad)">
+                <animateTransform attributeName="transform" type="translate"
+                  begin="0s" dur="6s" repeatCount="indefinite"
+                  values="0,0; 20,0; -10,0; 0,0" calcMode="spline"
+                  keySplines="0.45 0 0.55 1; 0.45 0 0.55 1; 0.45 0 0.55 1"/>
+              </path>
+            </g>
+
+            <!-- Внутренние тени по бокам (эффект цилиндра/объёма) -->
+            <path d="M22,8 L138,8 L118,200 Q80,212 42,200 Z"
+                  fill="url(#glass-inner-shadow)"/>
+
+            <!-- Дополнительный вертикальный объём (светлее сверху → темнее у дна) -->
+            <path d="M22,8 L138,8 L118,200 Q80,212 42,200 Z"
+                  fill="url(#glass-volume)"/>
+
+          </g>
+
+          <!-- === СТАКАН — КОНТУР И БЛИКИ (поверх воды) === -->
+
+          <!-- Основной контур стекла -->
+          <path d="M22,8 L138,8 L118,200 Q80,212 42,200 Z"
+                fill="none"
+                stroke="rgba(100,210,255,0.35)"
+                stroke-width="2"
+                stroke-linejoin="round"/>
+
+          <!-- Эллипс горлышка — даёт ощущение объёма верхнего края стакана -->
+          <ellipse cx="80" cy="8" rx="58" ry="4.5"
+                fill="none"
+                stroke="url(#rim-grad)"
+                stroke-width="2.5"/>
+
+          <!-- Верхний ободок -->
+          <path d="M22,8 L138,8"
+                fill="none"
+                stroke="rgba(180,235,255,0.5)"
+                stroke-width="2.5"
+                stroke-linecap="round"/>
+
+          <!-- Блик левый (широкий) — параллелен левой стенке стакана (22,8)→(42,200) -->
+          <path d="M28,14 L46,196"
+                fill="none"
+                stroke="url(#glass-shine-left)"
+                stroke-width="10"
+                stroke-linecap="round"
+                opacity="0.7"/>
+
+          <!-- Блик левый (узкий яркий) -->
+          <path d="M27,14 L41,150"
+                fill="none"
+                stroke="rgba(255,255,255,0.22)"
+                stroke-width="3"
+                stroke-linecap="round"/>
+
+          <!-- Блик верхний (горизонтальная полоска вдоль края) -->
+          <path d="M24,10 L136,10"
+                fill="none"
+                stroke="rgba(255,255,255,0.3)"
+                stroke-width="2"
+                stroke-linecap="round"/>
+
+          <!-- Правый блик (слабый, контр-блик) — параллелен правой стенке (138,8)→(118,200) -->
+          <path d="M130,14 L114,196"
+                fill="none"
+                stroke="rgba(255,255,255,0.06)"
+                stroke-width="4"
+                stroke-linecap="round"/>
+
+          <!-- Дно: скруглённый эллипс -->
+          <path d="M42,200 Q80,212 118,200"
+                fill="none"
+                stroke="rgba(100,210,255,0.4)"
+                stroke-width="2"
+                stroke-linecap="round"/>
+
+          <!-- Процент — в центре стакана, полупрозрачный -->
+          <text id="glass-pct"
+                x="80" y="114"
+                text-anchor="middle"
+                dominant-baseline="middle"
+                font-family="'JetBrains Mono',monospace"
+                font-size="28"
+                font-weight="800"
+                fill="rgba(255,255,255,0.7)"
+                letter-spacing="-1">0%</text>
+        </svg>
+      </div>
+
+      <div class="progress-remain-row">
+        <span class="progress-remain" id="progress-remain">осталось 2800 мл</span>
+      </div>
+    </section>
+
+    <!-- КНОПКИ ДОБАВЛЕНИЯ -->
+    <section class="card buttons-card">
+      <p class="section-title">Добавить</p>
+      <div class="drink-grid">
+        <button class="drink-btn" data-amount="250" data-type="water">
+          <span class="drink-icon" aria-hidden="true">
+            <!-- SF-style water drop SVG -->
+            <svg width="28" height="28" viewBox="0 0 28 28" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <path d="M14 3 C14 3 5 12.5 5 17.5 C5 22.2 9.1 26 14 26 C18.9 26 23 22.2 23 17.5 C23 12.5 14 3 14 3 Z" fill="url(#drop-grad)" />
+              <path d="M9.5 18 C9.5 15.5 11.5 13.5 14 13" stroke="rgba(255,255,255,0.45)" stroke-width="1.5" stroke-linecap="round"/>
+              <defs>
+                <linearGradient id="drop-grad" x1="14" y1="3" x2="14" y2="26" gradientUnits="userSpaceOnUse">
+                  <stop offset="0%" stop-color="#60d0ff"/>
+                  <stop offset="100%" stop-color="#0077cc"/>
+                </linearGradient>
+              </defs>
+            </svg>
+          </span>
+          <span class="drink-name">Вода</span>
+          <span class="drink-amount">+250 мл</span>
+        </button>
+
+        <button class="drink-btn" data-amount="250" data-type="tea">
+          <span class="drink-icon" aria-hidden="true">
+            <svg width="28" height="28" viewBox="0 0 28 28" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <rect x="5" y="11" width="16" height="13" rx="3" fill="url(#tea-grad)"/>
+              <path d="M21 14 Q26 14 26 18 Q26 22 21 22" stroke="#7ecf8e" stroke-width="2" fill="none" stroke-linecap="round"/>
+              <rect x="8" y="22" width="10" height="2" rx="1" fill="rgba(255,255,255,0.2)"/>
+              <!-- steam -->
+              <path d="M10 9 Q11 6 10 4" stroke="#7ecf8e" stroke-width="1.5" fill="none" stroke-linecap="round"/>
+              <path d="M14 8 Q15 5 14 3" stroke="#7ecf8e" stroke-width="1.5" fill="none" stroke-linecap="round"/>
+              <defs>
+                <linearGradient id="tea-grad" x1="13" y1="11" x2="13" y2="24" gradientUnits="userSpaceOnUse">
+                  <stop offset="0%" stop-color="#5ac47a"/>
+                  <stop offset="100%" stop-color="#2d7a48"/>
+                </linearGradient>
+              </defs>
+            </svg>
+          </span>
+          <span class="drink-name">Чай</span>
+          <span class="drink-amount">+250 мл</span>
+        </button>
+
+        <button class="drink-btn drink-btn--coffee" data-amount="250" data-type="coffee">
+          <span class="drink-icon" aria-hidden="true">
+            <svg width="28" height="28" viewBox="0 0 28 28" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <rect x="5" y="12" width="14" height="11" rx="2.5" fill="url(#coffee-grad)"/>
+              <path d="M19 14 Q24 14 24 17.5 Q24 21 19 21" stroke="#c8a06a" stroke-width="2" fill="none" stroke-linecap="round"/>
+              <rect x="3" y="23" width="18" height="2.5" rx="1.25" fill="rgba(255,255,255,0.15)"/>
+              <!-- steam -->
+              <path d="M9 10 Q10.5 7 9 5" stroke="#c8a06a" stroke-width="1.5" fill="none" stroke-linecap="round"/>
+              <path d="M13 9 Q14.5 6 13 4" stroke="#c8a06a" stroke-width="1.5" fill="none" stroke-linecap="round"/>
+              <defs>
+                <linearGradient id="coffee-grad" x1="12" y1="12" x2="12" y2="23" gradientUnits="userSpaceOnUse">
+                  <stop offset="0%" stop-color="#b07840"/>
+                  <stop offset="100%" stop-color="#7a4e1e"/>
+                </linearGradient>
+              </defs>
+            </svg>
+          </span>
+          <span class="drink-name">Кофе</span>
+          <span class="drink-amount">+200 мл</span>
+          <span class="drink-note">×0.8</span>
+        </button>
+
+        <button class="drink-btn drink-btn--bottle" data-amount="500" data-type="water">
+          <span class="drink-icon" aria-hidden="true">
+            <svg width="28" height="28" viewBox="0 0 28 28" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <!-- bottle body -->
+              <path d="M11 7 L10 10 Q6 12 6 16 L6 22 Q6 25 10 25 L18 25 Q22 25 22 22 L22 16 Q22 12 18 10 L17 7 Z" fill="url(#bottle-grad)"/>
+              <!-- cap -->
+              <rect x="11" y="4" width="6" height="4" rx="1.5" fill="rgba(0,212,255,0.6)"/>
+              <!-- label -->
+              <rect x="8" y="16" width="12" height="5" rx="1" fill="rgba(255,255,255,0.1)"/>
+              <!-- water fill inside -->
+              <path d="M7 18 Q14 15 21 18 L21 22 Q21 24 18 24 L10 24 Q7 24 7 22 Z" fill="rgba(0,212,255,0.3)"/>
+              <!-- shine -->
+              <path d="M9 12 Q9.5 11 10 13" stroke="rgba(255,255,255,0.35)" stroke-width="1.5" stroke-linecap="round"/>
+              <defs>
+                <linearGradient id="bottle-grad" x1="14" y1="7" x2="14" y2="25" gradientUnits="userSpaceOnUse">
+                  <stop offset="0%" stop-color="rgba(0,180,255,0.7)"/>
+                  <stop offset="100%" stop-color="rgba(0,100,200,0.8)"/>
+                </linearGradient>
+              </defs>
+            </svg>
+          </span>
+          <span class="drink-name">Бутылка</span>
+          <span class="drink-amount">+500 мл</span>
+        </button>
+      </div>
+
+      <!-- СВОЁ ЧИСЛО — теперь text, поддерживает "-" -->
+      <div class="custom-row">
+        <div class="custom-input-wrap">
+          <input
+            type="text"
+            id="custom-amount"
+            class="custom-input"
+            placeholder="Своё количество мл"
+            inputmode="numeric"
+            autocomplete="off"
+          />
+          <span class="custom-unit">мл</span>
+        </div>
+        <button class="custom-btn" id="custom-add-btn">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+          Добавить
+        </button>
+      </div>
+    </section>
+
+    <!-- ПОСЛЕДНЕЕ ДЕЙСТВИЕ + СБРОС -->
+    <div class="actions-row">
+      <div class="last-action" id="last-action">
+        <span class="last-action-dot" id="last-action-dot"></span>
+        <span class="last-action-text" id="last-action-text">Нет записей за сегодня</span>
+      </div>
+      <button class="reset-btn" id="reset-btn" title="Сбросить день">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="1 4 1 10 7 10"/><path d="M3.51 15a9 9 0 1 0 .49-4.87"/></svg>
+        Сброс
+      </button>
+    </div>
+
+    <!-- ИСТОРИЯ 7 ДНЕЙ -->
+    <section class="card week-card">
+      <div class="week-header">
+        <h2 class="week-title">История за 7 дней</h2>
+        <span class="week-avg" id="week-avg">Ср: — мл</span>
+      </div>
+      <div class="week-chart" id="week-chart" aria-label="График за неделю"></div>
+    </section>
+
+  </div><!-- /app -->
+
+  <!-- TOAST -->
+  <div class="toast" id="toast" aria-live="polite"></div>
+
+  <!-- МОДАЛКА ПОДТВЕРЖДЕНИЯ -->
+  <div class="modal-overlay" id="modal-overlay">
+    <div class="modal">
+      <div class="modal-icon-wrap">
+        <svg width="32" height="32" viewBox="0 0 28 28" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <path d="M14 3 C14 3 5 12.5 5 17.5 C5 22.2 9.1 26 14 26 C18.9 26 23 22.2 23 17.5 C23 12.5 14 3 14 3 Z" fill="url(#modal-drop)"/>
+          <line x1="10" y1="14" x2="18" y2="14" stroke="rgba(255,255,255,0.8)" stroke-width="2" stroke-linecap="round"/>
+          <defs>
+            <linearGradient id="modal-drop" x1="14" y1="3" x2="14" y2="26" gradientUnits="userSpaceOnUse">
+              <stop offset="0%" stop-color="#60d0ff"/><stop offset="100%" stop-color="#0077cc"/>
+            </linearGradient>
+          </defs>
+        </svg>
+      </div>
+      <h3 class="modal-title">Сбросить данные дня?</h3>
+      <p class="modal-desc">Весь прогресс за сегодня будет обнулён. Прошлые дни сохранятся.</p>
+      <div class="modal-btns">
+        <button class="modal-cancel" id="modal-cancel">Отмена</button>
+        <button class="modal-confirm" id="modal-confirm">Сбросить</button>
+      </div>
+    </div>
+  </div>
+
+  <script src="script.js"></script>
+  <script>
+    if ('serviceWorker' in navigator) {
+      window.addEventListener('load', () => {
+        navigator.serviceWorker.register('sw.js')
+          .then(reg => console.log('Service Worker зарегистрирован!', reg))
+          .catch(err => console.error('Ошибка SW:', err));
+      }); // Вот эта скобка закрывает window.addEventListener
+    }
+  </script>
+</body>
+</html>
