@@ -73,7 +73,8 @@ const elModalConfirm   = $('modal-confirm');
    ============================================ */
 const getGoal    = () => (state.weight || DEFAULT_WEIGHT) * ML_PER_KG;
 const getToday   = () => state.history[getTodayKey()] || 0;
-const getPct     = () => Math.min(100, Math.round((getToday() / getGoal()) * 100));
+const getPct     = () => Math.round((getToday() / getGoal()) * 100);
+const getPctVisual = () => Math.min(100, getPct());
 
 /* ============================================
    RENDER — PROGRESS GLASS
@@ -89,6 +90,7 @@ const GLASS_FULL_H     = GLASS_FLAT_BOTTOM_Y - GLASS_TOP_Y; // 192
 
 function updateGlass() {
   const pct    = getPct();
+  const pctVisual = getPctVisual();
   const amount = getToday();
   const goal   = getGoal();
   const remain = Math.max(0, goal - amount);
@@ -102,10 +104,10 @@ function updateGlass() {
   // а нижняя граница rect всегда зафиксирована на 214, чтобы скруглённое
   // дно стакана было залито при любом ненулевом проценте.
   if (elWaterRect) {
-    if (pct <= 0) {
+    if (pctVisual <= 0) {
       elWaterRect.setAttribute('height', '0');
     } else {
-      const surfaceY = GLASS_FLAT_BOTTOM_Y - (pct / 100) * GLASS_FULL_H;
+      const surfaceY = GLASS_FLAT_BOTTOM_Y - (pctVisual / 100) * GLASS_FULL_H;
       const waterH   = GLASS_FILL_BOTTOM_Y - surfaceY;
       elWaterRect.setAttribute('y', surfaceY.toFixed(2));
       elWaterRect.setAttribute('height', Math.max(0, waterH).toFixed(2));
@@ -228,7 +230,7 @@ function addWater(mlRaw, type = 'water') {
   // Toast
   const total = getToday();
   const goal  = getGoal();
-  const pct   = Math.min(100, Math.round((total / goal) * 100));
+  const pct   = Math.round((total / goal) * 100);
   if (pct >= 100 && total - ml < goal) {
     showToast(`🎉 Норма выполнена! ${total} мл выпито!`);
   } else {
